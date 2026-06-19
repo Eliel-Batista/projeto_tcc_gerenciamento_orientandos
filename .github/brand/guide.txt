@@ -1,0 +1,114 @@
+Guia de Identidade Visual: EdgeSearch (v1.0)
+
+1. Visao Geral e Conceito
+- Proposito: garantir uniformidade e coerencia em todas as manifestacoes visuais.
+- Atmosfera de design: minimalista (sem ser simplista), profissional e tecnologica.
+- Inspiracao: simbolo construido a partir da letra "E" com referencias a graficos e pixels.
+- Elementos de apoio: baseados em codigo binario, representados por circulos (0) e quadrados (1).
+
+2. Elementos da Assinatura Visual
+- Simbolo: combinacao modular de pixels formando um "E" estilizado.
+- Logotipo: palavra "edgesearch" em tipografia especifica.
+
+Configuracoes:
+- Horizontal: simbolo a esquerda do logotipo.
+- Vertical: simbolo acima do logotipo.
+- Simbolo isolado: avatares e favicons.
+
+3. Paleta de Cores
+Cores institucionais primarias:
+- Roxo: #7852EA (cor principal de destaque; evitar uso como fundo em aplicacoes)
+- Preto: #000000
+- Branco: #FFFFFF
+
+Escala de cinza:
+- Cinza 1: #E9F2F4
+- Cinza 2: #F5F5F5
+- Cinza 3: #F4F1FD
+
+4. Tipografia
+Familia tipografica oficial: Sora.
+Hierarquia:
+- Titulos: Sora ExtraBold
+- Subtitulos: Sora SemiBold ou Bold
+- Corpo de texto: Sora Regular
+
+Regras de alinhamento:
+- Sempre alinhado a esquerda.
+- Nao justificar texto.
+- Nao alinhar texto a direita.
+- Em textos muito pequenos, preferir Bold para legibilidade.
+
+5. Regras de Aplicacao e Protecao
+Area de protecao:
+- Espaco livre ao redor da marca definido pela altura da letra "e" do logotipo.
+- Nenhum elemento grafico ou texto pode invadir esta area.
+
+Dimensoes minimas:
+Digital:
+- Horizontal: 90 px
+- Vertical: 70 px
+- Favicon: 20 px
+
+Impresso:
+- Horizontal: 15 mm
+- Vertical: 9 mm
+
+Usos nao permitidos:
+- Nao rotacionar a marca.
+- Nao distorcer (alterar proporcoes).
+- Nao usar degrade ou sombra.
+- Nao alterar fontes ou cores estabelecidas.
+- Nao aplicar sobre fundos com baixa legibilidade.
+
+6. Diretrizes para Midias Sociais
+- Avatar: simbolo ocupando area total de 1080x1080 px.
+- Variacoes: usar versoes cromaticas indicadas (roxo/preto ou roxo/branco).
+
+7. Formatos de Arquivos
+- RGB: uso digital (redes sociais, sites, videos).
+- CMYK/Pantone: uso exclusivo para impressao fisica.
+- Monocromatico (preto/branco): uso tecnico (verniz, relevo, corte em vinil).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+8. Estrutura de Assets (.github/brand/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+.github/brand/
+├── logos/
+│   ├── logo-h-on-light.png        # horizontal, fundos claros
+│   ├── logo-h-on-dark.png         # horizontal, fundos escuros
+│   ├── logo-h-on-light-tag.png    # horizontal + tagline, fundo claro
+│   ├── logo-h-on-dark-tag.png     # horizontal + tagline, fundo escuro
+│   ├── logo-h-black.png           # horizontal monocromatico preto
+│   ├── logo-h-white.png           # horizontal monocromatico branco
+│   ├── logo-v-on-light.png        # vertical, fundo claro
+│   ├── logo-v-on-dark.png         # vertical, fundo escuro
+│   ├── logo-v-black.png           # vertical monocromatico preto
+│   └── logo-v-white.png           # vertical monocromatico branco
+├── symbols/
+│   ├── symbol-on-light.png        # simbolo "E" para fundo claro (favicon, avatar)
+│   ├── symbol-on-dark.png         # simbolo "E" para fundo escuro
+│   ├── symbol-black.png           # monocromatico preto
+│   └── symbol-white.png           # monocromatico branco
+├── icons/
+│   ├── light/                     # icones para fundos claros (7 arquivos)
+│   │   └── search | alert | user | shield | analytics | donut | target
+│   └── dark/                      # icones para fundos escuros (7 arquivos)
+│       └── search | alert | user | shield | analytics | donut | target
+├── shapes/                        # elementos graficos de apoio (10 arquivos)
+│   └── circle | square | rect-h | rect-v | square-circle  [gray | purple]
+├── fonts/
+│   ├── Sora-Regular.ttf
+│   ├── Sora-Bold.ttf
+│   ├── Sora-SemiBold.ttf
+│   └── Sora-ExtraBold.ttf
+└── guide.txt                      # este arquivo
+
+Arquivos removidos (pesados ou sem uso em digital):
+- Pasta legacy original (3.9 MB de originais ja copiados)
+- Arquivos .ai (Adobe Illustrator — nao utilizaveis por agentes)
+- Fontes nao usadas: ExtraLight, Light, Medium, Thin, VariableFont
+- Shapes tecnicos shape-empty-* (sem conteudo visual util)
+- Pasta service-letters (letras avulsas: c, d, g, o, p)
+- Pasta Manual da marca/ substituida por .github/brand/

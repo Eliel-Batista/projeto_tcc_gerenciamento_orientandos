@@ -1,0 +1,9 @@
+target/
+*.log
+*.class
+.DS_Store
+.git/
+.gitignore
+README.md
+.dockerignore
+Dockerfile

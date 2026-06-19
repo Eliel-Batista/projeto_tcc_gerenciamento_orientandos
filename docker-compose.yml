@@ -1,0 +1,75 @@
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: siaoa-postgres
+    environment:
+      POSTGRES_DB: siaoa
+      POSTGRES_USER: siaoa_user
+      POSTGRES_PASSWORD: siaoa_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siaoa_user -d siaoa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - siaoa-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: siaoa-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/siaoa
+      SPRING_DATASOURCE_USERNAME: siaoa_user
+      SPRING_DATASOURCE_PASSWORD: siaoa_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      JWT_SECRET: change-me-in-production-use-environment-variable
+      MAIL_USERNAME: testedotcc952@gmail.com
+      MAIL_PASSWORD: eqkowsdnkfcvuwxg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - siaoa-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: siaoa-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://backend:8080/api
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - siaoa-network
+
+volumes:
+  postgres_data:
+
+networks:
+  siaoa-network:
+    driver: bridge

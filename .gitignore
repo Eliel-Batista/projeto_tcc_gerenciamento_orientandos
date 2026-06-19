@@ -1,0 +1,13 @@
+# Ignorar arquivos Markdown
+*.md
+
+# Exceções (Manter os READMEs principais)
+!README.md
+!frontend/README.md
+!backend/README.md
+
+# Ignorar pastas dos agentes
+.agents/
+.edgesearch/
+.github/agents/
+.github/skills/

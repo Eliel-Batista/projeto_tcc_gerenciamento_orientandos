@@ -51,11 +51,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL
     container_name: siaoa-frontend
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://backend:8080/api
+      - VITE_API_URL
     depends_on:
       - backend
     healthcheck:

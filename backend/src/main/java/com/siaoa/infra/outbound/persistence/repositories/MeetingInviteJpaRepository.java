@@ -21,4 +21,7 @@ public interface MeetingInviteJpaRepository extends JpaRepository<MeetingInviteJ
 
     /** Convites criados por um orientador (para o painel lateral dele) */
     List<MeetingInviteJpaEntity> findByOrientadorIdAndStatus(UUID orientadorId, String status);
+
+    /** Todos os convites de um orientador (enviados por ele ou recebidos de orientandos) */
+    List<MeetingInviteJpaEntity> findByOrientadorId(UUID orientadorId);
 }

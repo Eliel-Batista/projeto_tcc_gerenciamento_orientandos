@@ -178,13 +178,11 @@ export const Register: React.FC = () => {
       <div className="bg-white flex items-center justify-center p-8 md:p-16">
         <div className="w-full max-w-sm">
           <div className="flex items-center gap-4 mb-10">
-            <div className="text-[#3b0764] flex items-center justify-center">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2.5a.75.75 0 0 1 .71.51l.8 2.22A7.95 7.95 0 0 1 16.35 7l2.12-.9a.75.75 0 0 1 .84.18l2.12 2.12a.75.75 0 0 1 .18.84l-.9 2.12a7.95 7.95 0 0 1 1.77 2.84l2.22.8a.75.75 0 0 1 .51.71v3a.75.75 0 0 1-.51.71l-2.22.8a7.95 7.95 0 0 1-1.77 2.84l.9 2.12a.75.75 0 0 1-.18.84l-2.12 2.12a.75.75 0 0 1-.84.18l-2.12-.9a7.95 7.95 0 0 1-2.84 1.77l-.8 2.22a.75.75 0 0 1-.71.51h-3a.75.75 0 0 1-.71-.51l-.8-2.22a7.95 7.95 0 0 1-2.84-1.77l-2.12.9a.75.75 0 0 1-.84-.18l-2.12-2.12a.75.75 0 0 1-.18-.84l.9-2.12a7.95 7.95 0 0 1-1.77-2.84l-2.22-.8a.75.75 0 0 1-.51-.71v-3a.75.75 0 0 1 .51-.71l2.22-.8a7.95 7.95 0 0 1 1.77-2.84l-.9-2.12a.75.75 0 0 1 .18-.84l2.12-2.12a.75.75 0 0 1 .84-.18l2.12.9A7.95 7.95 0 0 1 10.49 5.23l.8-2.22a.75.75 0 0 1 .71-.51h3ZM12 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-4 9.5c0-1.8 2-3 4-3s4 1.2 4 3v1H8v-1Z"/>
-              </svg>
+            <div className="flex items-center justify-center">
+              <img src="/icone_saoa.png" alt="SAOA Logo" className="w-12 h-12" />
             </div>
             <div>
-              <h1 className="text-4xl font-extrabold text-[#3b0764] tracking-wide">SIAOA</h1>
+              <h1 className="text-4xl font-extrabold text-[#3b0764] tracking-wide">SAOA</h1>
             </div>
           </div>
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { authService } from '@/services/authService';
+import { User, Lock, Eye, EyeOff, UserPlus, HelpCircle, ExternalLink } from 'lucide-react';
 
 type ViewState = 'login' | 'forgot-password' | 'verify-code' | 'reset-password';
 
@@ -15,7 +16,7 @@ export const Login: React.FC = () => {
   const [localError, setLocalError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(''); // Representa o "Usuário"
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -23,7 +24,7 @@ export const Login: React.FC = () => {
 
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; code?: string; newPassword?: string; confirmPassword?: string }>({});
   const [touched, setTouched] = useState({ email: false, password: false, code: false, newPassword: false, confirmPassword: false });
-  const [logoError, setLogoError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) navigate('/dashboard', { replace: true });
@@ -37,17 +38,14 @@ export const Login: React.FC = () => {
 
   const validateLoginForm = (): boolean => {
     const newErrors: any = {};
-    if (!email) newErrors.email = 'Email é obrigatório';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Email inválido';
+    if (!email) newErrors.email = 'Usuário é obrigatório';
     if (!password) newErrors.password = 'Senha é obrigatória';
-    else if (password.length < 8) newErrors.password = 'Senha deve ter pelo menos 8 caracteres';
     setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleBlur = (field: 'email' | 'password' | 'code' | 'newPassword' | 'confirmPassword') => {
     setTouched((prev) => ({ ...prev, [field]: true }));
-    // Validação inline poderia ir aqui, mas vamos manter simples por agora
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -55,6 +53,7 @@ export const Login: React.FC = () => {
     clearMessages();
     if (!validateLoginForm()) return;
     try {
+      // Aqui usamos o email como "usuário"
       await login(email, password);
       navigate('/dashboard', { replace: true });
     } catch {
@@ -65,8 +64,8 @@ export const Login: React.FC = () => {
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldErrors({ email: 'Email inválido' });
+    if (!email) {
+      setFieldErrors({ email: 'Usuário/Email é obrigatório' });
       return;
     }
     setLocalLoading(true);
@@ -132,270 +131,296 @@ export const Login: React.FC = () => {
   const displayError = error || localError;
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 font-sans">
-      <div className="bg-white flex items-center justify-center p-8 md:p-16">
-        <div className="w-full max-w-sm">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="text-[#3b0764] flex items-center justify-center">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2.5a.75.75 0 0 1 .71.51l.8 2.22A7.95 7.95 0 0 1 16.35 7l2.12-.9a.75.75 0 0 1 .84.18l2.12 2.12a.75.75 0 0 1 .18.84l-.9 2.12a7.95 7.95 0 0 1 1.77 2.84l2.22.8a.75.75 0 0 1 .51.71v3a.75.75 0 0 1-.51.71l-2.22.8a7.95 7.95 0 0 1-1.77 2.84l.9 2.12a.75.75 0 0 1-.18.84l-2.12 2.12a.75.75 0 0 1-.84.18l-2.12-.9a7.95 7.95 0 0 1-2.84 1.77l-.8 2.22a.75.75 0 0 1-.71.51h-3a.75.75 0 0 1-.71-.51l-.8-2.22a7.95 7.95 0 0 1-2.84-1.77l-2.12.9a.75.75 0 0 1-.84-.18l-2.12-2.12a.75.75 0 0 1-.18-.84l.9-2.12a7.95 7.95 0 0 1-1.77-2.84l-2.22-.8a.75.75 0 0 1-.51-.71v-3a.75.75 0 0 1 .51-.71l2.22-.8a7.95 7.95 0 0 1 1.77-2.84l-.9-2.12a.75.75 0 0 1 .18-.84l2.12-2.12a.75.75 0 0 1 .84-.18l2.12.9A7.95 7.95 0 0 1 10.49 5.23l.8-2.22a.75.75 0 0 1 .71-.51h3ZM12 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm-4 9.5c0-1.8 2-3 4-3s4 1.2 4 3v1H8v-1Z"/>
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-4xl font-extrabold text-[#3b0764] tracking-wide">SIAOA</h1>
-            </div>
+    <div className="min-h-screen flex font-sans">
+      
+      {/* Painel Esquerdo (Informativo / Decorativo) */}
+      <div 
+        className="hidden lg:flex flex-col justify-between w-[65%] p-12 text-white bg-[#2E0B5B] bg-cover bg-bottom relative"
+        style={{ backgroundImage: 'url(/tela_login.png)' }}
+      >
+        <div className="flex items-center gap-4 mt-8 z-10">
+          <img src="/brasao_ufba.png" alt="Brasão UFBA" className="w-16 h-auto drop-shadow-md" />
+          <div className="border-l border-white/30 pl-4">
+            <h2 className="text-3xl font-serif font-bold tracking-wider">UFBA</h2>
+            <p className="text-sm text-gray-200 mt-1">Universidade Federal<br/>da Bahia</p>
           </div>
+        </div>
 
-          {displayError && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-800 text-sm flex items-start gap-2">
-              <svg className="mt-0.5 shrink-0" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-              </svg>
-              <span>{displayError}</span>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg text-green-800 text-sm flex items-start gap-2">
-              <svg className="mt-0.5 shrink-0" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {viewState === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-500 mb-1 ml-1">E-Mail</label>
-                <div className="relative">
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
-                    onBlur={() => handleBlur('email')}
-                    className={`w-full pr-14 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                      touched.email && fieldErrors.email ? 'ring-2 ring-red-500' : 'focus:ring-[#6f21e8]'
-                    }`}
-                    placeholder="alex@email.com"
-                    disabled={loading}
-                  />
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                    <div className="w-10 h-10 bg-[#6f21e8] rounded-md flex items-center justify-center text-white">
-                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-500 mb-1 ml-1">Senha</label>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
-                    onBlur={() => handleBlur('password')}
-                    className={`w-full pr-14 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                      touched.password && fieldErrors.password ? 'ring-2 ring-red-500' : 'focus:ring-[#6f21e8]'
-                    }`}
-                    placeholder="Insira sua senha"
-                    disabled={loading}
-                  />
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                    <div className="w-10 h-10 bg-[#6f21e8] rounded-md flex items-center justify-center text-white">
-                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                {fieldErrors.password && <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>}
-              </div>
-
-              <div className="flex justify-end">
-                <button 
-                  type="button" 
-                  onClick={() => { setViewState('forgot-password'); clearMessages(); }}
-                  className="text-sm text-[#6f21e8] font-semibold underline decoration-[#6f21e8] underline-offset-4 hover:brightness-110"
-                >
-                  Esqueceu sua senha?
-                </button>
-              </div>
-
-              <Button type="submit" className="w-full bg-[#6f21e8] hover:bg-[#5b15cc] text-white py-6 mt-4 rounded-lg text-lg font-medium" disabled={loading}>
-                {loading ? 'Entrando...' : 'Login'}
-              </Button>
-            </form>
-          )}
-
-          {viewState === 'forgot-password' && (
-            <form onSubmit={handleForgotSubmit} className="space-y-5">
-              <p className="text-gray-600 text-sm">Digite seu e-mail para receber um código de recuperação.</p>
-              <div>
-                <label htmlFor="reset-email" className="block text-sm font-medium text-gray-500 mb-1 ml-1">E-Mail</label>
-                <div className="relative">
-                  <input
-                    id="reset-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
-                    className={`w-full pr-4 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6f21e8] transition-colors`}
-                    placeholder="alex@email.com"
-                    disabled={loading}
-                  />
-                </div>
-                {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
-              </div>
-
-              <Button type="submit" className="w-full bg-[#6f21e8] hover:bg-[#5b15cc] text-white py-6 mt-4 rounded-lg text-lg font-medium" disabled={loading}>
-                {loading ? 'Enviando...' : 'Enviar Código'}
-              </Button>
-
-              <div className="text-center mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => { setViewState('login'); clearMessages(); }}
-                  className="text-sm text-gray-500 hover:text-gray-800"
-                >
-                  Voltar para o Login
-                </button>
-              </div>
-            </form>
-          )}
-
-          {viewState === 'verify-code' && (
-            <form onSubmit={handleVerifySubmit} className="space-y-5">
-              <p className="text-gray-600 text-sm">Um código de 6 dígitos foi enviado para <span className="font-semibold">{email}</span>.</p>
-              
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-500 mb-1 ml-1">Código de Recuperação</label>
-                <input
-                  id="code"
-                  type="text"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => { setCode(e.target.value); clearMessages(); }}
-                  className={`w-full pr-4 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6f21e8] transition-colors font-mono text-center tracking-[0.5em] text-lg`}
-                  placeholder="000000"
-                  disabled={loading}
-                />
-                {fieldErrors.code && <p className="mt-1 text-sm text-red-600">{fieldErrors.code}</p>}
-              </div>
-
-              <Button type="submit" className="w-full bg-[#6f21e8] hover:bg-[#5b15cc] text-white py-6 mt-4 rounded-lg text-lg font-medium" disabled={loading}>
-                {loading ? 'Verificando...' : 'Verificar Código'}
-              </Button>
-              
-              <div className="text-center mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => { setViewState('login'); clearMessages(); }}
-                  className="text-sm text-gray-500 hover:text-gray-800"
-                >
-                  Cancelar e Voltar ao Login
-                </button>
-              </div>
-            </form>
-          )}
-
-          {viewState === 'reset-password' && (
-            <form onSubmit={handleResetSubmit} className="space-y-5">
-              <p className="text-gray-600 text-sm">Crie uma nova senha de acesso.</p>
-
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-500 mb-1 ml-1">Nova Senha</label>
-                <input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => { setNewPassword(e.target.value); clearMessages(); }}
-                  className={`w-full pr-4 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6f21e8] transition-colors`}
-                  placeholder="Nova senha (mín. 8 caracteres)"
-                  disabled={loading}
-                />
-                {fieldErrors.newPassword && <p className="mt-1 text-sm text-red-600">{fieldErrors.newPassword}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-500 mb-1 ml-1">Confirme a Nova Senha</label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => { setConfirmPassword(e.target.value); clearMessages(); }}
-                  className={`w-full pr-4 pl-4 py-3 bg-[#f8f9fa] border-none rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6f21e8] transition-colors`}
-                  placeholder="Repita a nova senha"
-                  disabled={loading}
-                />
-                {fieldErrors.confirmPassword && <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>}
-              </div>
-
-              <Button type="submit" className="w-full bg-[#6f21e8] hover:bg-[#5b15cc] text-white py-6 mt-4 rounded-lg text-lg font-medium" disabled={loading}>
-                {loading ? 'Redefinindo...' : 'Redefinir Senha'}
-              </Button>
-              
-              <div className="text-center mt-4">
-                <button 
-                  type="button" 
-                  onClick={() => { setViewState('login'); clearMessages(); }}
-                  className="text-sm text-gray-500 hover:text-gray-800"
-                >
-                  Cancelar e Voltar ao Login
-                </button>
-              </div>
-            </form>
-          )}
-
-          {viewState === 'login' && (
-            <>
-              <div className="mt-8 flex items-center gap-4">
-                <hr className="flex-1 border-gray-200" />
-                <span className="text-xs text-gray-400 font-medium tracking-wider">OR</span>
-                <hr className="flex-1 border-gray-200" />
-              </div>
-
-              <div className="mt-8">
-                <a href="/register">
-                  <Button variant="secondary" className="w-full border border-[#6f21e8] text-[#6f21e8] bg-white hover:bg-gray-50 py-6 rounded-lg text-lg font-medium">Cadastre-se</Button>
-                </a>
-              </div>
-            </>
-          )}
+        <div className="mb-[50vh] max-w-md z-10">
+          <h1 className="text-7xl font-serif font-bold mb-2 text-[#C084FC]">SAOA</h1>
+          <h3 className="text-xl font-medium mb-8 text-white">Sistema de Apoio e Organização Acadêmica</h3>
+          
+          <div className="w-12 h-0.5 bg-[#C084FC] mb-6"></div>
+          
+          <p className="text-sm leading-relaxed text-gray-200">
+            Uma plataforma integrada para apoiar a gestão acadêmica, 
+            promover a organização e fortalecer a comunidade universitária.
+          </p>
         </div>
       </div>
 
-      <div className="hidden md:flex flex-col items-center justify-center bg-[#EFEFEF] p-12">
-        <div className="max-w-xl text-center px-4 flex flex-col items-center justify-center space-y-10">
-          {!logoError ? (
-            <img 
-              src="/brasao_ufba.png" 
-              alt="Brasão da Universidade Federal da Bahia" 
-              className="w-80 h-auto object-contain"
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            <div className="w-80 h-64 border-2 border-dashed border-[#6f21e8] rounded-2xl flex flex-col items-center justify-center text-center p-6 bg-white/50 shadow-inner">
-              <svg width="40" height="40" fill="none" stroke="#6f21e8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              <p className="text-[#6f21e8] font-semibold mb-2">Brasão ausente</p>
-              <p className="text-sm text-gray-600">
-                Salve o ícone PNG que você anexou na pasta:<br/>
-                <code className="bg-gray-200 px-2 py-1 rounded text-[#3b0764] font-bold mt-2 inline-block">frontend/public/brasao_ufba.png</code>
-              </p>
+      {/* Painel Direito (Formulário) */}
+      <div className="flex-1 flex flex-col items-center justify-center bg-[#F4F2F7] p-4 relative overflow-y-auto">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            
+            <div className="flex flex-col items-center mb-8">
+              <img src="/icone_saoa.png" alt="SAOA Logo" className="w-24 h-24 mb-2 object-contain" />
+              <h2 className="text-4xl font-serif font-bold text-[#4B0082] tracking-wide mb-1">SAOA</h2>
+              <p className="text-xs text-gray-500 font-medium">Sistema de Apoio e Organização Acadêmica</p>
             </div>
-          )}
-          <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#6f21e8]">Seja bem-vindo ao SIAOA</h2>
-            <p className="text-xl md:text-2xl text-[#6f21e8] opacity-90">Sistema de Informação e Acompanhamento de Orientações Acadêmicas</p>
+
+            {displayError && (
+              <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm flex items-start gap-2">
+                <span>{displayError}</span>
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-6 p-3 bg-green-50 border border-green-100 rounded-xl text-green-600 text-sm flex items-start gap-2">
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {viewState === 'login' && (
+              <>
+                <div className="flex items-center gap-4 mb-6">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-sm font-bold text-[#4B0082]">Acesse sua conta</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+
+                <form onSubmit={handleLoginSubmit} className="space-y-5">
+                  <div>
+                    <label htmlFor="email" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Usuário</label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <User size={18} />
+                      </div>
+                      <input
+                        id="email"
+                        type="text"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
+                        onBlur={() => handleBlur('email')}
+                        className={`w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-sm ${
+                          touched.email && fieldErrors.email ? 'border-red-400' : ''
+                        }`}
+                        placeholder="Digite seu usuário"
+                        disabled={loading}
+                      />
+                    </div>
+                    {fieldErrors.email && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="password" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Senha</label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock size={18} />
+                      </div>
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
+                        onBlur={() => handleBlur('password')}
+                        className={`w-full pl-10 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-sm ${
+                          touched.password && fieldErrors.password ? 'border-red-400' : ''
+                        }`}
+                        placeholder="Digite sua senha"
+                        disabled={loading}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {fieldErrors.password && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.password}</p>}
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button 
+                      type="button" 
+                      onClick={() => { setViewState('forgot-password'); clearMessages(); }}
+                      className="text-xs text-[#4B0082] font-semibold hover:underline"
+                    >
+                      Esqueceu sua senha?
+                    </button>
+                  </div>
+
+                  <Button type="submit" className="w-full bg-[#7852EA] hover:bg-[#643fdc] text-white py-6 rounded-xl font-medium shadow-md shadow-purple-900/10 transition-all mt-2" disabled={loading}>
+                    {loading ? 'Entrando...' : 'Entrar'}
+                  </Button>
+                </form>
+
+                <div className="flex items-center gap-4 my-6">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-xs text-gray-400 font-medium">ou</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+
+                <Link to="/register" className="block">
+                  <Button variant="secondary" className="w-full border-2 border-[#7852EA] text-[#7852EA] hover:bg-[#7852EA]/5 py-6 rounded-xl font-semibold flex items-center justify-center gap-2">
+                    <UserPlus size={18} />
+                    Cadastre-se
+                  </Button>
+                </Link>
+              </>
+            )}
+
+            {/* Telas de Recuperação (mesmo layout visual) */}
+            {viewState === 'forgot-password' && (
+              <form onSubmit={handleForgotSubmit} className="space-y-5">
+                <div className="flex items-center gap-4 mb-6">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-sm font-bold text-[#4B0082]">Recuperar senha</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+                <p className="text-gray-500 text-xs text-center mb-6">Digite seu usuário/e-mail para receber um código de recuperação.</p>
+                <div>
+                  <label htmlFor="reset-email" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Usuário / E-Mail</label>
+                  <div className="relative">
+                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <User size={18} />
+                      </div>
+                    <input
+                      id="reset-email"
+                      type="text"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-sm"
+                      placeholder="Digite seu usuário ou e-mail"
+                      disabled={loading}
+                    />
+                  </div>
+                  {fieldErrors.email && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.email}</p>}
+                </div>
+
+                <Button type="submit" className="w-full bg-[#7852EA] hover:bg-[#643fdc] text-white py-6 rounded-xl font-medium shadow-md shadow-purple-900/10 transition-all mt-4" disabled={loading}>
+                  {loading ? 'Enviando...' : 'Enviar Código'}
+                </Button>
+
+                <div className="text-center mt-6">
+                  <button type="button" onClick={() => { setViewState('login'); clearMessages(); }} className="text-xs text-gray-500 hover:text-[#4B0082] font-semibold underline underline-offset-2">
+                    Voltar para o Login
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {viewState === 'verify-code' && (
+              <form onSubmit={handleVerifySubmit} className="space-y-5">
+                <div className="flex items-center gap-4 mb-6">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-sm font-bold text-[#4B0082]">Verificar Código</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+                <p className="text-gray-500 text-xs text-center mb-6">Um código de 6 dígitos foi enviado para <span className="font-bold">{email}</span>.</p>
+                
+                <div>
+                  <label htmlFor="code" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Código de Recuperação</label>
+                  <input
+                    id="code"
+                    type="text"
+                    maxLength={6}
+                    value={code}
+                    onChange={(e) => { setCode(e.target.value); clearMessages(); }}
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-center tracking-[0.5em] text-lg font-mono"
+                    placeholder="000000"
+                    disabled={loading}
+                  />
+                  {fieldErrors.code && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.code}</p>}
+                </div>
+
+                <Button type="submit" className="w-full bg-[#7852EA] hover:bg-[#643fdc] text-white py-6 rounded-xl font-medium shadow-md shadow-purple-900/10 transition-all mt-4" disabled={loading}>
+                  {loading ? 'Verificando...' : 'Verificar Código'}
+                </Button>
+                
+                <div className="text-center mt-6">
+                  <button type="button" onClick={() => { setViewState('login'); clearMessages(); }} className="text-xs text-gray-500 hover:text-[#4B0082] font-semibold underline underline-offset-2">
+                    Cancelar e Voltar ao Login
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {viewState === 'reset-password' && (
+              <form onSubmit={handleResetSubmit} className="space-y-5">
+                <div className="flex items-center gap-4 mb-6">
+                  <hr className="flex-1 border-gray-200" />
+                  <span className="text-sm font-bold text-[#4B0082]">Nova Senha</span>
+                  <hr className="flex-1 border-gray-200" />
+                </div>
+                <p className="text-gray-500 text-xs text-center mb-6">Crie uma nova senha de acesso.</p>
+
+                <div>
+                  <label htmlFor="newPassword" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Nova Senha</label>
+                  <div className="relative">
+                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock size={18} />
+                      </div>
+                    <input
+                      id="newPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => { setNewPassword(e.target.value); clearMessages(); }}
+                      className="w-full pl-10 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-sm"
+                      placeholder="Nova senha (mín. 8 caracteres)"
+                      disabled={loading}
+                    />
+                    <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                  </div>
+                  {fieldErrors.newPassword && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.newPassword}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-xs font-bold text-[#4B0082] mb-1.5 ml-1">Confirme a Nova Senha</label>
+                  <div className="relative">
+                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock size={18} />
+                      </div>
+                    <input
+                      id="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => { setConfirmPassword(e.target.value); clearMessages(); }}
+                      className="w-full pl-10 pr-12 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4B0082]/20 focus:border-[#4B0082] transition-all text-sm"
+                      placeholder="Repita a nova senha"
+                      disabled={loading}
+                    />
+                  </div>
+                  {fieldErrors.confirmPassword && <p className="mt-1 ml-1 text-xs text-red-500">{fieldErrors.confirmPassword}</p>}
+                </div>
+
+                <Button type="submit" className="w-full bg-[#7852EA] hover:bg-[#643fdc] text-white py-6 rounded-xl font-medium shadow-md shadow-purple-900/10 transition-all mt-4" disabled={loading}>
+                  {loading ? 'Redefinindo...' : 'Redefinir Senha'}
+                </Button>
+                
+                <div className="text-center mt-6">
+                  <button type="button" onClick={() => { setViewState('login'); clearMessages(); }} className="text-xs text-gray-500 hover:text-[#4B0082] font-semibold underline underline-offset-2">
+                    Cancelar e Voltar ao Login
+                  </button>
+                </div>
+              </form>
+            )}
+
+          </div>
+
+          <div className="mt-8 flex justify-center items-center gap-2 text-xs text-[#4B0082] font-medium opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
+            <HelpCircle size={16} />
+            <span>Precisa de ajuda?</span>
+            <span className="underline ml-1">Acesse o suporte</span>
+            <ExternalLink size={14} className="ml-0.5" />
           </div>
         </div>
       </div>

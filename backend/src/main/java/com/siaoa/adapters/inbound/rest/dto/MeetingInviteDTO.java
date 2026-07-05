@@ -20,6 +20,8 @@ public class MeetingInviteDTO {
     private String orientandoNome;
     private String status;
     private String motivoRecusa;
+    /** true = este convite foi enviado pelo usuário atual; false = ele é o destinatário */
+    private boolean sentByMe;
 
     public MeetingInviteDTO() {}
 
@@ -37,6 +39,7 @@ public class MeetingInviteDTO {
         this.orientandoNome = orientandoNome;
         this.status = status;
         this.motivoRecusa = motivoRecusa;
+        this.sentByMe = false;
     }
 
     public UUID getId() { return id; }
@@ -68,4 +71,7 @@ public class MeetingInviteDTO {
 
     public String getMotivoRecusa() { return motivoRecusa; }
     public void setMotivoRecusa(String motivoRecusa) { this.motivoRecusa = motivoRecusa; }
+
+    public boolean isSentByMe() { return sentByMe; }
+    public void setSentByMe(boolean sentByMe) { this.sentByMe = sentByMe; }
 }

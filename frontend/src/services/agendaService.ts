@@ -21,6 +21,7 @@ export interface MeetingInvite {
   orientandoNome: string;
   status: 'PENDENTE' | 'ACEITO' | 'RECUSADO';
   motivoRecusa?: string;
+  sentByMe: boolean;
 }
 
 /**
@@ -72,6 +73,7 @@ function mapInvite(inv: any): MeetingInvite {
     orientandoNome: inv.orientandoNome,
     status: inv.status,
     motivoRecusa: inv.motivoRecusa,
+    sentByMe: inv.sentByMe ?? false,
     start: parseDate(inv.start),
     end: parseDate(inv.end),
   };

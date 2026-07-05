@@ -87,13 +87,6 @@ export const Agenda: React.FC = () => {
   const events = allEvents;
 
 
-  // Convites pendentes (para o orientando)
-  const pendingInvites = invites.filter(inv => inv.status === 'PENDENTE');
-
-  // Convites que o orientador enviou e ainda estão pendentes
-  const sentPendingInvites = !isOrientando
-    ? invites.filter(inv => inv.status === 'PENDENTE')
-    : [];
 
   // Modal State — Cadastro/Edição
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -201,7 +194,7 @@ export const Agenda: React.FC = () => {
     const startDate = new Date(year, month - 1, day, startH, startM);
     const endDate = new Date(year, month - 1, day, endH, endM);
 
-    // Valida seleção de orientandos para reuniões
+    // Valida seleção de orientandos para reuniões (apenas para orientador)
     if (formData.tipo === 'reuniao' && !isOrientando && selectedOrientandoIds.length === 0) {
       setOrientandosError(true);
       addToast({ id: Date.now().toString(), title: 'Selecione os Participantes', message: 'Selecione ao menos um orientando para a reunião.', type: 'ERROR' });
@@ -240,7 +233,9 @@ export const Agenda: React.FC = () => {
           .map(o => o.nome.split(' ')[0])
           .join(', ');
         const toastMsg = formData.tipo === 'reuniao'
-          ? `Reunião criada! Convites enviados para: ${nomes || 'orientandos selecionados'}.`
+          ? isOrientando
+            ? 'Solicitação de reunião enviada! Seu orientador será notificado.'
+            : `Reunião criada! Convites enviados para: ${nomes || 'orientandos selecionados'}.`
           : 'O compromisso foi adicionado à sua agenda.';
 
         addToast({ id: Date.now().toString(), title: 'Compromisso Criado', message: toastMsg, type: 'SUCCESS' });
@@ -393,8 +388,10 @@ export const Agenda: React.FC = () => {
     };
   };
 
-  // ── Painel lateral unificado (mesmo design para orientando e orientador) ──
-  const activeInvites = isOrientando ? pendingInvites : sentPendingInvites;
+  // ── Painel lateral unificado (ambos os perfis) ──
+  // activeInvites: para orientando = pendentes recebidos + pendentes enviados
+  //                para orientador = pendentes recebidos + pendentes enviados
+  const activeInvites = invites.filter(inv => inv.status === 'PENDENTE');
 
   const renderPanel = () => (
     <>
@@ -410,7 +407,10 @@ export const Agenda: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[#6f21e8] text-sm leading-tight truncate">{inv.meetingTitle}</p>
                   <p className="text-gray-500 text-xs mt-0.5">
-                    {isOrientando ? `Por: ${inv.orientadorNome}` : `Para: ${inv.orientandoNome}`}
+                    {inv.sentByMe
+                      ? `Para: ${isOrientando ? inv.orientadorNome : inv.orientandoNome}`
+                      : `De: ${isOrientando ? inv.orientadorNome : inv.orientandoNome}`
+                    }
                   </p>
                 </div>
               </div>
@@ -426,8 +426,24 @@ export const Agenda: React.FC = () => {
                 <p className="text-gray-500 text-xs line-clamp-2 mb-2">{inv.meetingDescricao}</p>
               )}
 
-              {/* Ações */}
-              {isOrientando ? (
+              {/* Ações — sentByMe = aguardando resposta do outro; !sentByMe = precisa responder */}
+              {inv.sentByMe ? (
+                // O usuário atual enviou este convite → aguardando resposta
+                <div className="flex items-center justify-between mt-3">
+                  <span className="inline-block bg-[#ede9ff] text-[#6f21e8] text-[10px] font-bold px-2 py-1 rounded">
+                    Aguardando resposta
+                  </span>
+                  {/* Orientando pode cancelar a solicitação que ele mesmo enviou */}
+                  <button
+                    onClick={() => handleCancelInviteAsOrientador(inv)}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-700 text-xs font-bold transition-colors"
+                    title="Cancelar solicitação"
+                  >
+                    <XCircle size={14} /> Cancelar
+                  </button>
+                </div>
+              ) : (
+                // O usuário atual recebeu este convite → pode aceitar ou recusar
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => handleAcceptInvite(inv)}
@@ -440,19 +456,6 @@ export const Agenda: React.FC = () => {
                     className="flex-1 flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 rounded-lg transition-colors"
                   >
                     <XCircle size={13} /> Recusar
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between mt-3">
-                  <span className="inline-block bg-[#ede9ff] text-[#6f21e8] text-[10px] font-bold px-2 py-1 rounded">
-                    Aguardando resposta
-                  </span>
-                  <button
-                    onClick={() => handleCancelInviteAsOrientador(inv)}
-                    className="flex items-center gap-1 text-red-500 hover:text-red-700 text-xs font-bold transition-colors"
-                    title="Cancelar convite"
-                  >
-                    <XCircle size={14} /> Cancelar
                   </button>
                 </div>
               )}

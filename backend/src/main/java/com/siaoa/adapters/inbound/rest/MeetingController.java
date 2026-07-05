@@ -56,10 +56,18 @@ public class MeetingController {
         Set<UUID> visibleMeetingIds = meetingRepository.findByCreatedBy(currentUserId)
                 .stream().map(MeetingJpaEntity::getId).collect(Collectors.toSet());
 
-        // Reuniões às quais o usuário foi convidado (exceto as canceladas por ele)
+        // Reuniões às quais o usuário foi convidado como orientando
+        // Exclui: CANCELADO (cancelado por alguém) e RECUSADO (o próprio recusou)
         inviteRepository.findByOrientandoId(currentUserId)
                 .stream()
-                .filter(inv -> !"CANCELADO".equals(inv.getStatus()))
+                .filter(inv -> !"CANCELADO".equals(inv.getStatus()) && !"RECUSADO".equals(inv.getStatus()))
+                .forEach(inv -> visibleMeetingIds.add(inv.getMeetingId()));
+
+        // Reuniões às quais o usuário foi convidado como orientador (quando um orientando cria)
+        // Exclui: CANCELADO e RECUSADO
+        inviteRepository.findByOrientadorId(currentUserId)
+                .stream()
+                .filter(inv -> !"CANCELADO".equals(inv.getStatus()) && !"RECUSADO".equals(inv.getStatus()))
                 .forEach(inv -> visibleMeetingIds.add(inv.getMeetingId()));
 
         List<MeetingDTO> dtoList = meetingRepository.findAll().stream()
@@ -100,56 +108,96 @@ public class MeetingController {
 
         MeetingJpaEntity saved = meetingRepository.save(entity);
 
-        // Se for do tipo "reuniao", cria convites para os orientandos selecionados
+        Optional<User> currentUserOpt = userRepository.findById(currentUserId);
+        boolean isOrientando = currentUserOpt
+                .map(u -> u.getProfile() == UserProfile.ORIENTANDO)
+                .orElse(false);
+
         if ("reuniao".equalsIgnoreCase(dto.getType())) {
-            Optional<User> orientadorOpt = userRepository.findById(currentUserId);
-            String orientadorNome = orientadorOpt.map(User::getFullName).orElse("Orientador");
 
-            // Busca todos os orientandos VINCULADOS ao orientador
-            List<OrientandoConnectionJpaEntity> conexoesVinculadas = orientandoRepository
-                    .findByOrientadorId(currentUserId)
-                    .stream()
-                    .filter(c -> "VINCULADO".equals(c.getStatus()))
-                    .collect(Collectors.toList());
+            if (isOrientando) {
+                // ── Orientando criando reunião → convida o orientador vinculado ──────
+                String orientandoNome = currentUserOpt.map(User::getFullName).orElse("Orientando");
 
-            // Se foram especificados orientandoIds, filtra apenas os selecionados (que estejam de fato vinculados)
-            List<UUID> selectedIds = dto.getOrientandoIds();
-            List<OrientandoConnectionJpaEntity> conexoes;
-            if (selectedIds != null && !selectedIds.isEmpty()) {
-                Set<UUID> selectedSet = new HashSet<>(selectedIds);
-                conexoes = conexoesVinculadas.stream()
-                        .filter(c -> selectedSet.contains(c.getOrientandoId()))
+                List<OrientandoConnectionJpaEntity> conexoes = orientandoRepository
+                        .findByOrientandoId(currentUserId)
+                        .stream()
+                        .filter(c -> "VINCULADO".equals(c.getStatus()))
                         .collect(Collectors.toList());
+
+                for (OrientandoConnectionJpaEntity conn : conexoes) {
+                    UUID orientadorId = conn.getOrientadorId();
+
+                    // Inverte papéis: orientandoId = currentUser, orientadorId = orientador
+                    MeetingInviteJpaEntity invite = new MeetingInviteJpaEntity(
+                            saved.getId(), orientadorId, currentUserId
+                    );
+                    inviteRepository.save(invite);
+
+                    String mensagem = String.format(
+                            "%s solicitou uma reunião: \"%s\" em %s às %s.",
+                            orientandoNome,
+                            saved.getTitle(),
+                            start.toLocalDate(),
+                            start.toLocalTime().withSecond(0).withNano(0)
+                    );
+                    notificationUseCase.createNotification(
+                            orientadorId,
+                            "Solicitação de Reunião",
+                            mensagem,
+                            NotificationType.MEETING_REQUEST,
+                            "meeting_invites",
+                            invite.getId()
+                    );
+                }
+
             } else {
-                conexoes = conexoesVinculadas;
-            }
+                // ── Orientador criando reunião → convida os orientandos selecionados ─
+                String orientadorNome = currentUserOpt.map(User::getFullName).orElse("Orientador");
 
-            for (OrientandoConnectionJpaEntity conn : conexoes) {
-                UUID orientandoUserId = conn.getOrientandoId();
+                List<OrientandoConnectionJpaEntity> conexoesVinculadas = orientandoRepository
+                        .findByOrientadorId(currentUserId)
+                        .stream()
+                        .filter(c -> "VINCULADO".equals(c.getStatus()))
+                        .collect(Collectors.toList());
 
-                MeetingInviteJpaEntity invite = new MeetingInviteJpaEntity(
-                        saved.getId(), currentUserId, orientandoUserId
-                );
-                inviteRepository.save(invite);
+                List<UUID> selectedIds = dto.getOrientandoIds();
+                List<OrientandoConnectionJpaEntity> conexoes;
+                if (selectedIds != null && !selectedIds.isEmpty()) {
+                    Set<UUID> selectedSet = new HashSet<>(selectedIds);
+                    conexoes = conexoesVinculadas.stream()
+                            .filter(c -> selectedSet.contains(c.getOrientandoId()))
+                            .collect(Collectors.toList());
+                } else {
+                    conexoes = conexoesVinculadas;
+                }
 
-                String mensagem = String.format(
-                        "Prof. %s agendou uma reunião: \"%s\" em %s às %s.",
-                        orientadorNome,
-                        saved.getTitle(),
-                        start.toLocalDate(),
-                        start.toLocalTime().withSecond(0).withNano(0)
-                );
-                notificationUseCase.createNotification(
-                        orientandoUserId,
-                        "Convite de Reunião",
-                        mensagem,
-                        NotificationType.MEETING_REQUEST,
-                        "meeting_invites",
-                        invite.getId()
-                );
+                for (OrientandoConnectionJpaEntity conn : conexoes) {
+                    UUID orientandoUserId = conn.getOrientandoId();
+
+                    MeetingInviteJpaEntity invite = new MeetingInviteJpaEntity(
+                            saved.getId(), currentUserId, orientandoUserId
+                    );
+                    inviteRepository.save(invite);
+
+                    String mensagem = String.format(
+                            "Prof. %s agendou uma reunião: \"%s\" em %s às %s.",
+                            orientadorNome,
+                            saved.getTitle(),
+                            start.toLocalDate(),
+                            start.toLocalTime().withSecond(0).withNano(0)
+                    );
+                    notificationUseCase.createNotification(
+                            orientandoUserId,
+                            "Convite de Reunião",
+                            mensagem,
+                            NotificationType.MEETING_REQUEST,
+                            "meeting_invites",
+                            invite.getId()
+                    );
+                }
             }
         }
-
 
         MeetingDTO novo = new MeetingDTO(
                 saved.getId(), saved.getTitle(), saved.getMeetingType(), true,
@@ -157,6 +205,7 @@ public class MeetingController {
         );
         return ResponseEntity.ok(novo);
     }
+
 
     // ─────────────────────────────────────────────────────────────────────────
     // DELETE /api/meetings/{id}
@@ -169,8 +218,8 @@ public class MeetingController {
 
     // ─────────────────────────────────────────────────────────────────────────
     // GET /api/meetings/invites — convites do usuário autenticado
-    //   Orientando: convites que ele recebeu (todos os status)
-    //   Orientador: convites que ele enviou (todos os status)
+    //   Orientando: convites recebidos + convites que ele enviou ao orientador
+    //   Orientador: convites que ele enviou + convites que ele recebeu de orientandos
     // ─────────────────────────────────────────────────────────────────────────
     @GetMapping("/invites")
     public ResponseEntity<List<MeetingInviteDTO>> listInvites() {
@@ -181,19 +230,57 @@ public class MeetingController {
                 .map(u -> u.getProfile() == UserProfile.ORIENTANDO)
                 .orElse(false);
 
-        List<MeetingInviteJpaEntity> invites;
-        if (isOrientando) {
-            // Orientando vê todos os convites recebidos (todos os status)
-            invites = inviteRepository.findByOrientandoId(currentUserId);
-        } else {
-            // Orientador vê os convites pendentes que ele enviou
-            invites = inviteRepository.findByOrientadorIdAndStatus(currentUserId, "PENDENTE");
-        }
+        List<MeetingInviteDTO> dtos = new java.util.ArrayList<>();
 
-        List<MeetingInviteDTO> dtos = invites.stream()
-                .map(inv -> buildInviteDTO(inv))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        if (isOrientando) {
+            // 1) Convites RECEBIDOS pelo orientando (enviados pelo orientador) — todos os status
+            inviteRepository.findByOrientandoId(currentUserId)
+                    .stream()
+                    .filter(inv -> {
+                        Optional<MeetingJpaEntity> meeting = meetingRepository.findById(inv.getMeetingId());
+                        // Exclui convites de reuniões que o próprio orientando criou
+                        return meeting.map(m -> !m.getCreatedBy().equals(currentUserId)).orElse(false);
+                    })
+                    .forEach(inv -> {
+                        MeetingInviteDTO dto = buildInviteDTO(inv);
+                        if (dto != null) {
+                            dto.setSentByMe(false);
+                            dtos.add(dto);
+                        }
+                    });
+
+            // 2) Convites ENVIADOS pelo orientando ao orientador (meetings criados pelo orientando) — apenas PENDENTE
+            inviteRepository.findByOrientandoId(currentUserId)
+                    .stream()
+                    .filter(inv -> "PENDENTE".equals(inv.getStatus()))
+                    .filter(inv -> {
+                        Optional<MeetingJpaEntity> meeting = meetingRepository.findById(inv.getMeetingId());
+                        return meeting.map(m -> m.getCreatedBy().equals(currentUserId)).orElse(false);
+                    })
+                    .forEach(inv -> {
+                        MeetingInviteDTO dto = buildInviteDTO(inv);
+                        if (dto != null) {
+                            dto.setSentByMe(true);
+                            dtos.add(dto);
+                        }
+                    });
+
+        } else {
+            // Orientador: convites PENDENTES onde ele é parte (enviou ou recebeu)
+            inviteRepository.findByOrientadorId(currentUserId)
+                    .stream()
+                    .filter(inv -> "PENDENTE".equals(inv.getStatus()))
+                    .forEach(inv -> {
+                        MeetingInviteDTO dto = buildInviteDTO(inv);
+                        if (dto != null) {
+                            // sentByMe = true se o orientador criou a reunião
+                            Optional<MeetingJpaEntity> meeting = meetingRepository.findById(inv.getMeetingId());
+                            boolean isSent = meeting.map(m -> m.getCreatedBy().equals(currentUserId)).orElse(true);
+                            dto.setSentByMe(isSent);
+                            dtos.add(dto);
+                        }
+                    });
+        }
 
         return ResponseEntity.ok(dtos);
     }

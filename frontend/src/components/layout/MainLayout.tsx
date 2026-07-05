@@ -34,13 +34,10 @@ export const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f4f4f5] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 z-10">
-        <div className="flex items-center gap-2">
-          {/* SAOA Logo */}
-          <div className="flex items-center justify-center">
-            <img src="/icone_saoa.png" alt="SAOA Logo" className="w-7 h-7" />
-          </div>
-          <h1 className="text-xl font-extrabold text-[#3b0764] tracking-wide">SAOA</h1>
+      <header className="bg-white border-b border-gray-200 h-24 flex items-center justify-between z-10 pr-6">
+        <div className="w-64 h-full flex items-center justify-center shrink-0">
+          {/* SAOA Logo — Ícone aumentado em mais 10% (~81px) */}
+          <img src="/icone_saoa.png" alt="SAOA Logo" className="w-[81px] h-[81px] object-contain" />
         </div>
 
         <div className="flex items-center gap-4 text-gray-600">
@@ -57,8 +54,7 @@ export const MainLayout: React.FC = () => {
           <div>
             {/* User Profile Box */}
             <div className="p-6 flex flex-col items-center border-b border-gray-100">
-              <div className="w-24 h-24 rounded-full bg-gray-300 border-2 border-blue-400 mb-3 flex items-center justify-center overflow-hidden">
-                {/* Fallback to silhouette if no image */}
+              <div className="w-24 h-24 rounded-full bg-gray-300 border-2 border-[#7852EA] mb-3 flex items-center justify-center overflow-hidden shrink-0">
                 <svg className="w-16 h-16 text-gray-100 mt-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg>

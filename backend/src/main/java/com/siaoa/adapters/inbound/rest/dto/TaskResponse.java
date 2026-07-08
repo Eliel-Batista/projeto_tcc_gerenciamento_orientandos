@@ -1,5 +1,6 @@
 package com.siaoa.adapters.inbound.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.siaoa.domain.valueobjects.Priority;
 import com.siaoa.domain.valueobjects.TaskStatus;
 import com.siaoa.domain.valueobjects.TaskType;
@@ -20,11 +21,14 @@ public class TaskResponse {
     private String description;
     private TaskType taskType;
     private TaskStatus status;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
     private Priority priority;
     private UUID assignedToId;
     private UUID createdById;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
     private List<TaskActivityDto> activities;
     private List<TaskCommentDto> comments;

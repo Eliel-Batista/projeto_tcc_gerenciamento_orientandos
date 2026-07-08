@@ -1,5 +1,6 @@
 package com.siaoa.adapters.inbound.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ public class TaskActivityDto {
     private UUID taskId;
     private String description;
     private boolean completed;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
     public TaskActivityDto() {}

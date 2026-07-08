@@ -88,7 +88,7 @@ public class TaskRepositoryAdapter implements TaskRepository {
      * @return JPA entity
      */
     private TaskJpaEntity toDatabaseEntity(Task task) {
-        return new TaskJpaEntity(
+        TaskJpaEntity taskJpa = new TaskJpaEntity(
                 task.getId(),
                 task.getProjectId(),
                 task.getTitle(),
@@ -101,13 +101,22 @@ public class TaskRepositoryAdapter implements TaskRepository {
                 task.getCreatedById(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
-                task.getActivities().stream().map(a -> new TaskActivityJpaEntity(
-                        a.getId(), a.getTaskId(), a.getDescription(), a.isCompleted(), a.getCreatedAt()
-                )).collect(Collectors.toList()),
-                task.getComments().stream().map(c -> new TaskCommentJpaEntity(
-                        c.getId(), c.getTaskId(), c.getAuthorId(), c.getContent(), c.getCreatedAt()
-                )).collect(Collectors.toList())
+                new ArrayList<>(),
+                new ArrayList<>()
         );
+
+        List<TaskActivityJpaEntity> activities = task.getActivities().stream().map(a -> new TaskActivityJpaEntity(
+                a.getId(), taskJpa, a.getDescription(), a.isCompleted(), a.getCreatedAt()
+        )).collect(Collectors.toList());
+
+        List<TaskCommentJpaEntity> comments = task.getComments().stream().map(c -> new TaskCommentJpaEntity(
+                c.getId(), taskJpa, c.getAuthorId(), c.getContent(), c.getCreatedAt()
+        )).collect(Collectors.toList());
+
+        taskJpa.setActivities(activities);
+        taskJpa.setComments(comments);
+
+        return taskJpa;
     }
 
     /**

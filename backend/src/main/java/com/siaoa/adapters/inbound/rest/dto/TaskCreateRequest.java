@@ -1,5 +1,6 @@
 package com.siaoa.adapters.inbound.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.siaoa.domain.valueobjects.Priority;
 import com.siaoa.domain.valueobjects.TaskStatus;
 import com.siaoa.domain.valueobjects.TaskType;
@@ -25,6 +26,7 @@ public class TaskCreateRequest {
     @NotNull(message = "Status is required")
     private TaskStatus status;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
 
     @NotNull(message = "Priority is required")

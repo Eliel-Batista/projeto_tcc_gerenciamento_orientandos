@@ -10,8 +10,9 @@ public class TaskCommentJpaEntity {
     @Id
     private UUID id;
 
-    @Column(name = "task_id", insertable = false, updatable = false)
-    private UUID taskId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", nullable = false)
+    private TaskJpaEntity task;
 
     @Column(name = "author_id", nullable = false)
     private UUID authorId;
@@ -27,22 +28,22 @@ public class TaskCommentJpaEntity {
 
     protected TaskCommentJpaEntity() {}
 
-    public TaskCommentJpaEntity(UUID id, UUID taskId, UUID authorId, String content, LocalDateTime createdAt) {
+    public TaskCommentJpaEntity(UUID id, TaskJpaEntity task, UUID authorId, String content, LocalDateTime createdAt) {
         this.id = id;
-        this.taskId = taskId;
+        this.task = task;
         this.authorId = authorId;
         this.content = content;
         this.createdAt = createdAt;
     }
 
     public UUID getId() { return id; }
-    public UUID getTaskId() { return taskId; }
+    public UUID getTaskId() { return task != null ? task.getId() : null; }
     public UUID getAuthorId() { return authorId; }
     public String getContent() { return content; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setId(UUID id) { this.id = id; }
-    public void setTaskId(UUID taskId) { this.taskId = taskId; }
+    public void setTask(TaskJpaEntity task) { this.task = task; }
     public void setAuthorId(UUID authorId) { this.authorId = authorId; }
     public void setContent(String content) { this.content = content; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

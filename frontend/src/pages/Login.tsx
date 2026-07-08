@@ -148,7 +148,7 @@ export const Login: React.FC = () => {
 
         <div className="mb-[50vh] max-w-md z-10">
           <h1 className="text-7xl font-serif font-bold mb-2 text-[#C084FC]">SAOA</h1>
-          <h3 className="text-xl font-medium mb-8 text-white">Sistema de Apoio e Organização Acadêmica</h3>
+          <h3 className="text-xl font-medium mb-8 text-white">Sistema de Acompanhamento de Orientações Acadêmicas</h3>
           
           <div className="w-12 h-0.5 bg-[#C084FC] mb-6"></div>
           
@@ -167,7 +167,7 @@ export const Login: React.FC = () => {
             <div className="flex flex-col items-center mb-8">
               <img src="/icone_saoa.png" alt="SAOA Logo" className="w-24 h-24 mb-2 object-contain" />
               <h2 className="text-4xl font-serif font-bold text-[#4B0082] tracking-wide mb-1">SAOA</h2>
-              <p className="text-xs text-gray-500 font-medium">Sistema de Apoio e Organização Acadêmica</p>
+              <p className="text-xs text-gray-500 font-medium">Sistema de Acompanhamento de Orientações Acadêmicas</p>
             </div>
 
             {displayError && (

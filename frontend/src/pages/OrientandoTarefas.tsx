@@ -168,21 +168,71 @@ export const OrientandoTarefas: React.FC = () => {
         addToast({ id: Date.now().toString(), title: 'Tarefa Atualizada', message: 'A tarefa foi salva com sucesso.', type: 'SUCCESS' });
       } else {
         let projectId = '';
-        if (projetos.length > 0) {
-          projectId = projetos[0].id;
-        } else {
-          // Create a default project transparently since the UI doesn't have a project creation flow yet
-          const newProject = await projectService.createProject({
-            title: 'Projeto Padrão',
-            description: 'Projeto base criado automaticamente',
-            projectType: 'TCC',
-            startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
-          });
-          projectId = newProject.id;
+        let targetProjectTitle = '';
+        let targetProjectDescription = '';
+        let projectType: 'TCC' | 'INICIACAO_CIENTIFICA' | 'MESTRADO' | 'DOUTORADO' | 'ESTAGIO_SUPERVISIONADO' = 'TCC';
+
+        // 1. Determine target project title based on the active connection
+        if (user?.profile === 'ORIENTADOR' && id) {
+          const targetOrientando = orientandos.find(o => o.id === id);
+          if (targetOrientando) {
+            targetProjectTitle = targetOrientando.projeto;
+            targetProjectDescription = `Projeto de TCC para ${targetOrientando.nome}`;
+            if (['TCC', 'INICIACAO_CIENTIFICA', 'MESTRADO', 'DOUTORADO', 'ESTAGIO_SUPERVISIONADO'].includes(targetOrientando.tipoCurso)) {
+              projectType = targetOrientando.tipoCurso as any;
+            }
+          }
+        } else if (user?.profile === 'ORIENTANDO') {
+          const linkedOrientando = orientandos.find(
+            (o) => o.email?.toLowerCase().trim() === user?.email?.toLowerCase().trim() && o.status === 'VINCULADO'
+          );
+          if (linkedOrientando) {
+            targetProjectTitle = linkedOrientando.projeto;
+            targetProjectDescription = `Projeto de TCC para ${linkedOrientando.nome}`;
+            if (['TCC', 'INICIACAO_CIENTIFICA', 'MESTRADO', 'DOUTORADO', 'ESTAGIO_SUPERVISIONADO'].includes(linkedOrientando.tipoCurso)) {
+              projectType = linkedOrientando.tipoCurso as any;
+            }
+          }
+        }
+
+        // 2. Resolve project ID or create project if not present
+        if (targetProjectTitle) {
+          const matchingProject = projetos.find(
+            (p) => p.title.toLowerCase().trim() === targetProjectTitle.toLowerCase().trim()
+          );
           
-          // Add to local state so subsequent tasks use the same project
-          setProjetos([newProject]);
+          if (matchingProject) {
+            projectId = matchingProject.id;
+          } else {
+            const newProject = await projectService.createProject({
+              title: targetProjectTitle,
+              description: targetProjectDescription || 'Projeto de orientação',
+              projectType: projectType,
+              startDate: new Date().toISOString().split('T')[0],
+              endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+            });
+            projectId = newProject.id;
+            setProjetos(prev => [...prev, newProject]);
+          }
+        } else {
+          // Fallback to "Projeto Padrão"
+          const defaultProject = projetos.find(
+            (p) => p.title.toLowerCase().trim() === 'projeto padrão'
+          );
+          
+          if (defaultProject) {
+            projectId = defaultProject.id;
+          } else {
+            const newProject = await projectService.createProject({
+              title: 'Projeto Padrão',
+              description: 'Projeto base criado automaticamente',
+              projectType: 'TCC',
+              startDate: new Date().toISOString().split('T')[0],
+              endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+            });
+            projectId = newProject.id;
+            setProjetos(prev => [...prev, newProject]);
+          }
         }
         
         await taskService.createTask(projectId, {

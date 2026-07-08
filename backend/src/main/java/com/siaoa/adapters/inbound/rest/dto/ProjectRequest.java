@@ -1,5 +1,6 @@
 package com.siaoa.adapters.inbound.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.siaoa.domain.valueobjects.ProjectType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,9 +17,11 @@ public class ProjectRequest {
     private ProjectType projectType;
 
     @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate startDate;
 
     @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
 
     public String getTitle() {
